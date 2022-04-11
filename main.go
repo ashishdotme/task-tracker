@@ -55,9 +55,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	var chore = Todo{}
+	chore.Category = "Chore"
+	chore.Content = "Other chore"
+
+	var social = Todo{}
+	social.Category = "Social"
+	social.Content = "Mobile App"
+
+	todos = append(todos, chore)
+	todos = append(todos, social)
+
 	// Create list
 	var taskArray []string
-	for i := 0; i < len(todos)-1; i++ {
+	for i := 0; i < len(todos); i++ {
 		taskArray = append(taskArray, todos[i].Content)
 	}
 
@@ -71,6 +82,7 @@ func main() {
 				"Select items from the list below:",
 				taskArray[:],
 				zenity.Title("Time tracker"),
+				zenity.Height(400),
 			)
 
 			// find task
