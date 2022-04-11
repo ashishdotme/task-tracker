@@ -29,16 +29,8 @@ type Todo struct {
 
 func main() {
 
-	// Create csv file
-	csvFile, err := os.OpenFile("history.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println("Failed creating file")
-	}
-
-	// Add first row
+	var csvFile = getFile()
 	csvwriter := csv.NewWriter(csvFile)
-	row := []string{"Date", "Task", "Category"}
-	csvwriter.Write(row)
 
 	// Get todos
 	todosResponse, err := apiReq("https://systemapi.prod.ashish.me/todos/incomplete", "GET")
@@ -79,7 +71,7 @@ func main() {
 
 			// Show alert
 			task, err := zenity.List(
-				"Select items from the list below:",
+				"Select task from the list below:",
 				taskArray[:],
 				zenity.Title("Time tracker"),
 				zenity.Height(400),
@@ -103,6 +95,23 @@ func main() {
 		}
 	}
 	csvFile.Close()
+}
+
+func getFile() *os.File {
+	if _, err := os.Stat("history.csv"); os.IsNotExist(err) {
+		csvFile, err := os.Create("history.csv")
+		if err != nil {
+			panic(err)
+		}
+		csvwriter := csv.NewWriter(csvFile)
+		row := []string{"Date", "Task", "Category"}
+		csvwriter.Write(row)
+		csvwriter.Flush()
+		return csvFile
+	} else {
+		csvFile, _ := os.OpenFile("history.csv", os.O_RDWR|os.O_APPEND, 0660)
+		return csvFile
+	}
 }
 
 func Find(slice interface{}, f func(value interface{}) bool) int {
