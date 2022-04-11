@@ -61,7 +61,6 @@ func main() {
 		taskArray = append(taskArray, todos[i].Content)
 	}
 
-	// While
 	for true {
 
 		// if time is right
