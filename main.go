@@ -30,7 +30,7 @@ type Todo struct {
 func main() {
 
 	// Create csv file
-	csvFile, err := os.Create("history.csv")
+	csvFile, err := os.OpenFile("history.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("Failed creating file")
 	}
