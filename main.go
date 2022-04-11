@@ -32,42 +32,42 @@ func main() {
 	var csvFile = getFile()
 	csvwriter := csv.NewWriter(csvFile)
 
-	// Get todos
-	todosResponse, err := apiReq("https://systemapi.prod.ashish.me/todos/incomplete", "GET")
-	if err != nil {
-		fmt.Println("[E] Failed to get tasks", err)
-		os.Exit(1)
-	}
-
-	// parse response
-	var todos []Todo
-	err = json.Unmarshal([]byte(todosResponse), &todos)
-	if err != nil {
-		fmt.Println("[E] Failed to parse", err)
-		os.Exit(1)
-	}
-
-	var chore = Todo{}
-	chore.Category = "Chore"
-	chore.Content = "Other chore"
-
-	var social = Todo{}
-	social.Category = "Social"
-	social.Content = "Mobile App"
-
-	todos = append(todos, chore)
-	todos = append(todos, social)
-
-	// Create list
-	var taskArray []string
-	for i := 0; i < len(todos); i++ {
-		taskArray = append(taskArray, todos[i].Content)
-	}
-
 	for true {
 
 		// if time is right
 		if float64(rand.Intn(9999999)) < 100 {
+
+			// Get todos
+			todosResponse, err := apiReq("https://systemapi.prod.ashish.me/todos/incomplete", "GET")
+			if err != nil {
+				fmt.Println("[E] Failed to get tasks", err)
+				os.Exit(1)
+			}
+
+			// parse response
+			var todos []Todo
+			err = json.Unmarshal([]byte(todosResponse), &todos)
+			if err != nil {
+				fmt.Println("[E] Failed to parse", err)
+				os.Exit(1)
+			}
+
+			var chore = Todo{}
+			chore.Category = "Chore"
+			chore.Content = "Other chore"
+
+			var social = Todo{}
+			social.Category = "Social"
+			social.Content = "Mobile App"
+
+			todos = append(todos, chore)
+			todos = append(todos, social)
+
+			// Create list
+			var taskArray []string
+			for i := 0; i < len(todos); i++ {
+				taskArray = append(taskArray, todos[i].Content)
+			}
 
 			// Show alert
 			task, err := zenity.List(
@@ -84,10 +84,12 @@ func main() {
 
 			// save data in csv file
 			if task != "" && err == nil && idx >= 0 {
-				row := []string{time.Now().Format(time.RFC3339), todos[idx].Content, todos[idx].Category}
+				t, _ := time.Now().UTC().MarshalText()
+				row := []string{string(t), todos[idx].Content, todos[idx].Category}
 				csvwriter.Write(row)
 			} else {
-				row := []string{time.Now().Format(time.RFC3339), "Timeout", "Timeout"}
+				t, _ := time.Now().UTC().MarshalText()
+				row := []string{string(t), "Timeout", "Timeout"}
 				csvwriter.Write(row)
 			}
 			csvwriter.Flush()
