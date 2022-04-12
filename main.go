@@ -55,14 +55,24 @@ func main() {
 
 			var chore = Todo{}
 			chore.Category = "Chore"
-			chore.Content = "Other chore"
+			chore.Content = "Household Chore"
 
-			var social = Todo{}
-			social.Category = "Social"
-			social.Content = "Mobile App"
+			var youtube = Todo{}
+			youtube.Category = "Social"
+			youtube.Content = "Youtube"
+
+			var news = Todo{}
+			news.Category = "Social"
+			news.Content = "News"
+
+			var fb = Todo{}
+			fb.Category = "Social"
+			fb.Content = "Facebook/Instagram/Discord"
 
 			todos = append(todos, chore)
-			todos = append(todos, social)
+			todos = append(todos, youtube)
+			todos = append(todos, news)
+			todos = append(todos, fb)
 
 			// Create list
 			var taskArray []string
