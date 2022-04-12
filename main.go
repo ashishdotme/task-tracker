@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -35,7 +36,7 @@ func main() {
 	for true {
 
 		// if time is right
-		if float64(rand.Intn(9999999)) < 100 {
+		if float64(rand.Intn(99999999)) < 100 {
 
 			// Get todos
 			todosResponse, err := apiReq("https://systemapi.prod.ashish.me/todos/incomplete", "GET")
@@ -69,12 +70,17 @@ func main() {
 				taskArray = append(taskArray, todos[i].Content)
 			}
 
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+			defer cancel()
+
 			// Show alert
 			task, err := zenity.List(
 				"Select task from the list below:",
 				taskArray[:],
 				zenity.Title("Time tracker"),
+				zenity.CancelLabel("Exit"),
 				zenity.Height(400),
+				zenity.Context(ctx),
 			)
 
 			// find task
@@ -88,12 +94,15 @@ func main() {
 				row := []string{string(t), todos[idx].Content, todos[idx].Category}
 				csvwriter.Write(row)
 			} else {
+				if err == zenity.ErrCanceled {
+					os.Exit(1)
+				}
 				t, _ := time.Now().UTC().MarshalText()
 				row := []string{string(t), "Timeout", "Timeout"}
 				csvwriter.Write(row)
 			}
 			csvwriter.Flush()
-			time.Sleep(120 * time.Second)
+			time.Sleep(240 * time.Second)
 		}
 	}
 	csvFile.Close()
