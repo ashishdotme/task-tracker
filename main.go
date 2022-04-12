@@ -57,6 +57,10 @@ func main() {
 			chore.Category = "Chore"
 			chore.Content = "Household Chore"
 
+			var dev = Todo{}
+			dev.Category = "Programming"
+			dev.Content = "Other coding task"
+
 			var youtube = Todo{}
 			youtube.Category = "Social"
 			youtube.Content = "Youtube"
@@ -69,6 +73,7 @@ func main() {
 			fb.Category = "Social"
 			fb.Content = "Facebook/Instagram/Discord"
 
+			todos = append(todos, dev)
 			todos = append(todos, chore)
 			todos = append(todos, youtube)
 			todos = append(todos, news)
@@ -101,14 +106,14 @@ func main() {
 			// save data in csv file
 			if task != "" && err == nil && idx >= 0 {
 				t, _ := time.Now().UTC().MarshalText()
-				row := []string{string(t), todos[idx].Content, todos[idx].Category}
+				row := []string{string(t), time.Now().Format("01-02-2006"), todos[idx].Content, todos[idx].Category}
 				csvwriter.Write(row)
 			} else {
 				if err == zenity.ErrCanceled {
 					os.Exit(1)
 				}
 				t, _ := time.Now().UTC().MarshalText()
-				row := []string{string(t), "Timeout", "Timeout"}
+				row := []string{string(t), time.Now().Format("01-02-2006"), "Timeout", "Timeout"}
 				csvwriter.Write(row)
 			}
 			csvwriter.Flush()
@@ -125,7 +130,7 @@ func getFile() *os.File {
 			panic(err)
 		}
 		csvwriter := csv.NewWriter(csvFile)
-		row := []string{"Date", "Task", "Category"}
+		row := []string{"Timestamp", "Day", "Task", "Category"}
 		csvwriter.Write(row)
 		csvwriter.Flush()
 		return csvFile
