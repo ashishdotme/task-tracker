@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"encoding/json"
@@ -39,7 +40,7 @@ func main() {
 		if float64(rand.Intn(99999999)) < 100 {
 
 			// Get todos
-			todosResponse, err := apiReq("https://systemapi.prod.ashish.me/todos/incomplete", "GET")
+			todosResponse, err := apiReq("https://api.ashish.me/todos/incomplete", "GET")
 			if err != nil {
 				fmt.Println("[E] Failed to get tasks", err)
 				os.Exit(1)
@@ -78,6 +79,11 @@ func main() {
 			todos = append(todos, youtube)
 			todos = append(todos, news)
 			todos = append(todos, fb)
+			newTask := Todo{
+				Category: "General",
+				Content:  "New task",
+			}
+			todos = append(todos, newTask)
 
 			// Create list
 			var taskArray []string
@@ -98,26 +104,37 @@ func main() {
 				zenity.Context(ctx),
 			)
 
-			// find task
-			idx := Find(todos, func(value interface{}) bool {
-				return value.(Todo).Content == task
-			})
-
-			// save data in csv file
-			if task != "" && err == nil && idx >= 0 {
-				t, _ := time.Now().UTC().MarshalText()
-				row := []string{string(t), time.Now().Format("01-02-2006"), todos[idx].Content, todos[idx].Category}
-				csvwriter.Write(row)
-			} else {
-				if err == zenity.ErrCanceled {
-					os.Exit(1)
+			if task == "New task" {
+				var newTask, _ = zenity.Entry("Add new task")
+				if err := sendNewTask(newTask, os.Getenv("ASHISHDOTME_TOKEN")); err != nil {
+					fmt.Printf("Error: %v\n", err)
+				} else {
+					fmt.Println("Task sent successfully!")
 				}
-				t, _ := time.Now().UTC().MarshalText()
-				row := []string{string(t), time.Now().Format("01-02-2006"), "Timeout", "Timeout"}
-				csvwriter.Write(row)
+				time.Sleep(240 * time.Second)
+			} else {
+
+				// find task
+				idx := Find(todos, func(value interface{}) bool {
+					return value.(Todo).Content == task
+				})
+
+				// save data in csv file
+				if task != "" && err == nil && idx >= 0 {
+					t, _ := time.Now().UTC().MarshalText()
+					row := []string{string(t), time.Now().Format("01-02-2006"), todos[idx].Content, todos[idx].Category}
+					csvwriter.Write(row)
+				} else {
+					if err == zenity.ErrCanceled {
+						os.Exit(1)
+					}
+					t, _ := time.Now().UTC().MarshalText()
+					row := []string{string(t), time.Now().Format("01-02-2006"), "Timeout", "Timeout"}
+					csvwriter.Write(row)
+				}
+				csvwriter.Flush()
+				time.Sleep(240 * time.Second)
 			}
-			csvwriter.Flush()
-			time.Sleep(240 * time.Second)
 		}
 	}
 	csvFile.Close()
@@ -170,4 +187,32 @@ func apiReq(url string, method string) (string, error) {
 		return "", err
 	}
 	return string(body), nil
+}
+
+func sendNewTask(newtask, apikey string) error {
+	task := map[string]string{"content": newtask}
+	jsonData, err := json.Marshal(task)
+	if err != nil {
+		return fmt.Errorf("error marshalling task: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.ashish.me/todos", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("error creating POST request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("apiKey", apikey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error sending POST request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("received non-OK response status: %s", resp.Status)
+	}
+
+	return nil
 }
